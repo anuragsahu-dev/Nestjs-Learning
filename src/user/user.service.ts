@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { RegisterDto } from '../auth/dto/registerUser.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
@@ -19,11 +23,18 @@ export class UserService {
       });
     } catch (error) {
       const e = error as { code?: number };
-      if (e.code === 11000) {
-        throw new ConflictException('Email is already taken');
-      } 
 
-      throw error;
+      const DUPLICATE_KEY_CODE = 11000;
+
+      if (e.code === DUPLICATE_KEY_CODE) {
+        throw new ConflictException('Email is already taken');
+      }
+
+      throw new InternalServerErrorException('Something went wrong');
     }
+  }
+
+  async getUserById(id: string) {
+     return await this.userModel.findOne({_id: id})
   }
 }
